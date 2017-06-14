@@ -15,15 +15,32 @@ class App extends React.Component {
     this.state = {
       brushColor: '#800909',
       lineWidth: 4,
-      // canvasStyle: {
-      //   backgroundColor: '#00FFDC'
-      // },
       clear: false
     }
     this.handleOnClickClear = this.handleOnClickClear.bind(this);
     this.handleOnClickChangeColorRed = this.handleOnClickChangeColorRed.bind(this);
     this.handleOnClickChangeColorYellow = this.handleOnClickChangeColorYellow.bind(this);
     this.record = this.record.bind(this);
+    fetch('https://api.gfycat.com/v1/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        grant_type: "client_credentials",
+        client_id: "2_qkXVfQ",
+        client_secret: "HxndaZS-nqmEQw_QytRiqblQCYGHRajFJ-2ElodyvmMQWeRfsWP8Zas14NY5BQ1U",
+      })
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log(responseJson);
+        //return responseJson.movies;
+    })
+    .catch((error) => {
+      console.error(error);
+    });
   }
 
   record() {
@@ -56,9 +73,6 @@ class App extends React.Component {
     encoder.start();
     encoder.setRepeat(0);  //0  -> loop forever, 1+ -> loop n times then stop
     encoder.setDelay(0); //go to next frame every n milliseconds
-    encoder.setTransparent(0x00FF00);
-    //encoder.setQuality(1);
-    
 
     var grabber = setInterval(function(){
       console.log('Grabbing '+count);
@@ -76,7 +90,7 @@ class App extends React.Component {
   }
 
   handleOnClickClear() {
-    document.querySelector('.recordedGif').innerHTML = '';
+    
     this.setState({
       clear: true
     });
