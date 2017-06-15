@@ -23,7 +23,7 @@ build/
 react-client/dist/bundle.js
 
 # APIs
-/config
+
 
 # Dependency directorys
 # Deployed apps should consider commenting these lines out:
