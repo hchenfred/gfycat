@@ -7,14 +7,19 @@ import '../assets/js/GIFEncoder.js';
 import { encode64 } from '../assets/js/b64.js';
 import '../assets/js/LZWEncoder.js';
 import '../assets/js/NeuQuant.js';
+import axios from 'axios';
+import { apiConfig } from '../../config/config.js';
 
 class App extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
-      brushColor: '#800909',
+      brushColor: '#0033CC',
       lineWidth: 4,
+      canvasStyle: {
+        borderColor: '#786B6B',
+        borderStyle: 'solid'
+      },
       clear: false,
       accessToken: '',
       grabbingFrames: false,
@@ -29,6 +34,11 @@ class App extends React.Component {
     this.encoder = new GIFEncoder();
   }
 
+  componentDidMount() {
+    const canvas = document.querySelector('canvas');
+    //canvas.style.height = '300';
+  }
+
 
   getGyfcatToken() {
     fetch('https://api.gfycat.com/v1/oauth/token', {
@@ -37,42 +47,34 @@ class App extends React.Component {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      // TODO: save client_secret in a config file and gitignore it
       body: JSON.stringify({
         grant_type: "client_credentials",
-        client_id: "2_qkXVfQ",
-        client_secret: "HxndaZS-nqmEQw_QytRiqblQCYGHRajFJ-2ElodyvmMQWeRfsWP8Zas14NY5BQ1U",
+        client_id: apiConfig.gyfcat.CLIENT_ID,
+        client_secret: apiConfig.gyfcat.CLIENT_SECRET,
       })
     })
     .then((response) => response.json())
     .then((responseJson) => {
-      console.log(responseJson.access_token);
+      console.log('token is ', responseJson.access_token);
       this.setState({ accessToken: responseJson.access_token });
-        //return responseJson.movies;
     })
     .catch((error) => {
       console.error(error);
     });
   }
 
-  uploadToGyfcat(url, title) {
-    fetch('https://api.gfycat.com/v1/gfycats', {
+  uploadToGyfcat(binaryData) {
+     fetch('https://api.gfycat.com/v1/gfycats', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.state.accessToken}`,
       },
-      // TODO: save client_secret in a config file and gitignore it
-      body: JSON.stringify({
-        fetchUrl: url,
-        title: title,
-      })
     })
     .then((response) => response.json())
     .then((responseJson) => {
-      console.log(responseJson);
-        //return responseJson.movies;
+      console.log(responseJson.gfyname);
     })
     .catch((error) => {
       console.error(error);
@@ -89,7 +91,7 @@ class App extends React.Component {
     this.setState({ grabbingFrames: false });
     const binary_gif = this.encoder.stream().getData();
     const data_url = 'data:image/gif;base64,' + encode64(binary_gif);
-    this.uploadToGyfcat('', 'whatever');
+    this.uploadToGyfcat(encode64(binary_gif), 'whatever.gif');
     const recordedImg = document.createElement('img');
     recordedImg.setAttribute("src", data_url);
     document.querySelector('.recordedGif').appendChild(recordedImg);
@@ -113,10 +115,11 @@ class App extends React.Component {
     const grabber = setInterval(() => {
       if (!this.state.grabbingFrames) {
         clearInterval(grabber);
+      } else {
+        console.log('Grabbing '+count);
+        count++;
+        this.encoder.addFrame(context);
       }
-      console.log('Grabbing '+count);
-      count++;
-      this.encoder.addFrame(context);
     }, grabRate);
   }
 
@@ -135,21 +138,41 @@ class App extends React.Component {
 
   handleOnClickChangeColorRed(){
     this.setState({
-      brushColor: '#800909',
+      brushColor: '#ff0000',
       clear: false
     });
   }
 
   render() {
+    const buttonStyle = {
+      margin: '5px'
+    };
+
+    const canvasContainerStyle = {
+      margin: '10px'
+    }
+
+    const titleStyle = {
+      margin: 'auto'
+    }
+
     return (
       <div>
-        <DrawableCanvas {...this.state} />
-        <button onClick={this.handleOnClickClear}>Clear all</button>
-        <button onClick={this.handleOnClickChangeColorYellow}>Set color to Yellow</button>
-        <button onClick={this.handleOnClickChangeColorRed}>Set color to Red</button>
-        <button onClick={this.handleOnClickRecord}>Start Recording</button>
-        <button onClick={this.handleOnClickDone}>Done Recording</button>
-        <button onClick={this.handleOnClickDownload}>Download the recorded GIF file</button>
+        <div>
+          <h1 className="text-center">Your Drawing Canvas</h1>
+        </div>
+        <div style={canvasContainerStyle}>
+          <DrawableCanvas {...this.state} />
+        </div>
+        <div>
+          <button style={buttonStyle} type="button" className="btn btn-info" onClick={this.handleOnClickClear}>Clear all</button>
+          <button style={buttonStyle} className="btn btn-info" onClick={this.handleOnClickChangeColorYellow}>Set color to Yellow</button>
+          <button style={buttonStyle} className="btn btn-info" onClick={this.handleOnClickChangeColorRed}>Set color to Red</button>
+          <button style={buttonStyle} className="btn btn-info" onClick={this.handleOnClickRecord}>Start Recording</button>
+          <button style={buttonStyle} className="btn btn-info" onClick={this.handleOnClickDone}>Done Recording</button>
+          <button style={buttonStyle} className="btn btn-info" onClick={this.handleOnClickDownload}>Download the recorded GIF file</button>
+        </div>
+        <br />
         <div className="recordedGif"></div>
       </div>
     );
