@@ -104,12 +104,12 @@ class App extends React.Component {
     const context = canvas.getContext('2d');
     context.fillStyle = 'rgb(255,255,255)';
     context.fillRect(0,0,canvas.width, canvas.height); //GIF can't do transparent so do white
-    const grabRate  = 270; // Miliseconds. 500 = half a second
+    const grabRate  = 270; 
     let count     = 0;
 
     this.encoder.start();
-    this.encoder.setRepeat(0);  //0  -> loop forever, 1+ -> loop n times then stop
-    this.encoder.setDelay(0); //go to next frame every n milliseconds
+    this.encoder.setRepeat(0);  
+    this.encoder.setDelay(0); 
     this.setState({ grabbingFrames: true });
 
     const grabber = setInterval(() => {
